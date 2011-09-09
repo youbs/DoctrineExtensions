@@ -67,7 +67,7 @@ class TreeListener extends MappedEventSubscriber
             if ($om instanceof \Doctrine\ORM\EntityManager) {
                 $managerName = 'ORM';
             } elseif ($om instanceof \Doctrine\ODM\MongoDB\DocumentManager) {
-                $managerName = 'ODM';
+                $managerName = 'ODM\\MongoDB';
             }
             if (!isset($this->strategyInstances[$config['strategy']])) {
                 $class = $this->getNamespace().'\\Strategy\\'.$managerName.'\\'.ucfirst($config['strategy']);
@@ -101,7 +101,6 @@ class TreeListener extends MappedEventSubscriber
             if ($config = $this->getConfiguration($om, $meta->name)) {
                 $usedClasses[$meta->name] = null;
                 $this->getStrategy($om, $meta->name)->processScheduledInsertion($om, $object);
-                $uow->recomputeSingleEntityChangeSet($meta, $object);
             }
         }
 

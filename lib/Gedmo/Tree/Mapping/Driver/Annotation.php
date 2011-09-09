@@ -56,6 +56,11 @@ class Annotation implements AnnotationDriverInterface
     const CLOSURE = 'Gedmo\\Mapping\\Annotation\\TreeClosure';
 
     /**
+     * Annotation to specify tree path property
+     */
+    const PATH = 'Gedmo\\Mapping\\Annotation\\TreePath';
+
+    /**
      * List of types which are valid for tree fields
      *
      * @var array
@@ -73,7 +78,8 @@ class Annotation implements AnnotationDriverInterface
      */
     private $strategies = array(
         'nested',
-        'closure'
+        'closure',
+        'path'
     );
 
     /**
@@ -143,7 +149,7 @@ class Annotation implements AnnotationDriverInterface
             if ($left = $this->reader->getPropertyAnnotation($property, self::LEFT)) {
                 $field = $property->getName();
                 if (!$meta->hasField($field)) {
-                    throw new InvalidMappingException("Unable to find 'left' - [{$field}] as mapped property in entity - {$meta->name}");
+                    throw new InvalidMappingException("Unable to find 'left' - [{$field}] as mapped property in object - {$meta->name}");
                 }
                 if (!$this->isValidField($meta, $field)) {
                     throw new InvalidMappingException("Tree left field - [{$field}] type is not valid and must be 'integer' in class - {$meta->name}");
@@ -154,7 +160,7 @@ class Annotation implements AnnotationDriverInterface
             if ($right = $this->reader->getPropertyAnnotation($property, self::RIGHT)) {
                 $field = $property->getName();
                 if (!$meta->hasField($field)) {
-                    throw new InvalidMappingException("Unable to find 'right' - [{$field}] as mapped property in entity - {$meta->name}");
+                    throw new InvalidMappingException("Unable to find 'right' - [{$field}] as mapped property in object - {$meta->name}");
                 }
                 if (!$this->isValidField($meta, $field)) {
                     throw new InvalidMappingException("Tree right field - [{$field}] type is not valid and must be 'integer' in class - {$meta->name}");
@@ -173,7 +179,7 @@ class Annotation implements AnnotationDriverInterface
             if ($root = $this->reader->getPropertyAnnotation($property, self::ROOT)) {
                 $field = $property->getName();
                 if (!$meta->hasField($field)) {
-                    throw new InvalidMappingException("Unable to find 'root' - [{$field}] as mapped property in entity - {$meta->name}");
+                    throw new InvalidMappingException("Unable to find 'root' - [{$field}] as mapped property in object - {$meta->name}");
                 }
                 if (!$this->isValidField($meta, $field)) {
                     throw new InvalidMappingException("Tree root field - [{$field}] type is not valid and must be 'integer' in class - {$meta->name}");
@@ -184,12 +190,24 @@ class Annotation implements AnnotationDriverInterface
             if ($parent = $this->reader->getPropertyAnnotation($property, self::LEVEL)) {
                 $field = $property->getName();
                 if (!$meta->hasField($field)) {
-                    throw new InvalidMappingException("Unable to find 'level' - [{$field}] as mapped property in entity - {$meta->name}");
+                    throw new InvalidMappingException("Unable to find 'level' - [{$field}] as mapped property in object - {$meta->name}");
                 }
                 if (!$this->isValidField($meta, $field)) {
                     throw new InvalidMappingException("Tree level field - [{$field}] type is not valid and must be 'integer' in class - {$meta->name}");
                 }
                 $config['level'] = $field;
+            }
+            // path
+            if ($parent = $this->reader->getPropertyAnnotation($property, self::PATH)) {
+                $field = $property->getName();
+                if (!$meta->hasField($field)) {
+                    throw new InvalidMappingException("Unable to find 'path' - [{$field}] as mapped property in object - {$meta->name}");
+                }
+                $mapping = $meta->getFieldMapping($field);
+                if (!$mapping || !in_array($mapping['type'], array('string', 'text'))) {
+                    throw new InvalidMappingException("Tree path field - [{$field}] type is not valid and must be 'string' or 'text' in class - {$meta->name}");
+                }
+                $config['path'] = $field;
             }
         }
     }
@@ -205,6 +223,28 @@ class Annotation implements AnnotationDriverInterface
     {
         $mapping = $meta->getFieldMapping($field);
         return $mapping && in_array($mapping['type'], $this->validTypes);
+    }
+
+    /**
+     * Validates metadata for path type tree
+     *
+     * @param ClassMetadata $meta
+     * @param array $config
+     * @throws InvalidMappingException
+     * @return void
+     */
+    private function validatePathTreeMetadata(ClassMetadata $meta, array $config)
+    {
+        $missingFields = array();
+        if (!isset($config['parent'])) {
+            $missingFields[] = 'parent';
+        }
+        if (!isset($config['path'])) {
+            $missingFields[] = 'path';
+        }
+        if ($missingFields) {
+            throw new InvalidMappingException("Missing properties: " . implode(', ', $missingFields) . " in class - {$meta->name}");
+        }
     }
 
     /**

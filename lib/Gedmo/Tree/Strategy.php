@@ -15,6 +15,11 @@ interface Strategy
     const CLOSURE = 'closure';
 
     /**
+     * Closure strategy
+     */
+    const PATH = 'path';
+
+    /**
      * Get the name of strategy
      *
      * @return string

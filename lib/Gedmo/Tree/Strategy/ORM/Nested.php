@@ -121,6 +121,7 @@ class Nested implements Strategy
         if (isset($config['root'])) {
             $meta->getReflectionProperty($config['root'])->setValue($node, 0);
         }
+        $em->getUnitOfWork()->recomputeSingleEntityChangeSet($meta, $node);
     }
 
     /**
