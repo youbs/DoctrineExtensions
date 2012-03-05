@@ -8,6 +8,9 @@ use Gedmo\Tree\Strategy;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Proxy\Proxy;
 use Gedmo\Tree\TreeListener;
+use Doctrine\ORM\Version;
+use Gedmo\Tool\Wrapper\AbstractWrapper;
+use Gedmo\Mapping\Event\AdapterInterface;
 
 /**
  * This strategy makes tree act like
@@ -127,7 +130,7 @@ class Closure implements Strategy
     /**
      * {@inheritdoc}
      */
-    public function onFlushEnd($em)
+    public function onFlushEnd($em, AdapterInterface $ea)
     {}
 
     /**
@@ -141,13 +144,19 @@ class Closure implements Strategy
     /**
      * {@inheritdoc}
      */
+    public function processPreUpdate($em, $node)
+    {}
+
+    /**
+     * {@inheritdoc}
+     */
     public function processPreRemove($em, $node)
     {}
 
      /**
      * {@inheritdoc}
      */
-    public function processScheduledInsertion($em, $node)
+    public function processScheduledInsertion($em, $node, AdapterInterface $ea)
     {}
 
     /**
@@ -159,7 +168,19 @@ class Closure implements Strategy
     /**
      * {@inheritdoc}
      */
-    public function processPostPersist($em, $entity)
+    public function processPostUpdate($em, $entity, AdapterInterface $ea)
+    {}
+
+    /**
+     * {@inheritdoc}
+     */
+    public function processPostRemove($em, $entity, AdapterInterface $ea)
+    {}
+
+    /**
+     * {@inheritdoc}
+     */
+    public function processPostPersist($em, $entity, AdapterInterface $ea)
     {
         $uow = $em->getUnitOfWork();
         if ($uow->hasPendingInsertions()) {
@@ -212,7 +233,7 @@ class Closure implements Strategy
     /**
      * {@inheritdoc}
      */
-    public function processScheduledUpdate($em, $node)
+    public function processScheduledUpdate($em, $node, AdapterInterface $ea)
     {
         $meta = $em->getClassMetadata(get_class($node));
         $config = $this->listener->getConfiguration($em, $meta->name);
